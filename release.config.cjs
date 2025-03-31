@@ -8,12 +8,6 @@ module.exports = {
     "@semantic-release/release-notes-generator",
     // "@sebbo2002/semantic-release-jsr",
     [
-      "@semantic-release/github",
-      {
-        assets: "dist/*.tgz",
-      },
-    ],
-    [
       "@semantic-release/npm",
       {
         npmPublish: true,
