@@ -30,7 +30,7 @@ module.exports = {
     // [
     //   "@semantic-release/exec",
     //   {
-    //     prepareCmd: "deno run test && deno run build:npm",
+    //     prepareCmd: "deno test && deno run build:npm",
     //   },
     // ],
   ],

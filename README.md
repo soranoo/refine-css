@@ -2,7 +2,7 @@
 
 Project starts on 02-03-2025
 
-![Tests](https://github.com/soranoo/refine-css/actions/workflows/auto_test.yml/badge.svg) [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)&nbsp;&nbsp;&nbsp;[![Donation](https://img.shields.io/static/v1?label=Donation&message=❤️&style=social)](https://github.com/soranoo/Donation)
+![Tests](https://github.com/soranoo/refine-css/actions/workflows/auto-test.yml/badge.svg) [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)&nbsp;&nbsp;&nbsp;[![Donation](https://img.shields.io/static/v1?label=Donation&message=❤️&style=social)](https://github.com/soranoo/Donation)
 
 <!-- [![banner](./docs/imgs/banner.png)](https://github.com/soranoo/refine-css) -->
 
