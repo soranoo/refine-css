@@ -29,7 +29,7 @@ jobs:
         run: deno install
 
       - name: Run tests
-        run: deno test
+        run: deno run test
         
       - name: Build NPM package
         run: deno run build:npm
