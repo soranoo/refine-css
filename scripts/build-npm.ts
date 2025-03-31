@@ -11,7 +11,7 @@ await build({
   outDir: `${BASE_PATH}`,
   typeCheck: false,
   scriptModule: false,
-  packageManager: "pnpm",
+  packageManager: "npm",
   shims: {
     // see JS docs for overview and more options
     deno: true,
