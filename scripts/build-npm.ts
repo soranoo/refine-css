@@ -18,20 +18,20 @@ await build({
   },
   package: {
     // package.json properties
-    name: "refine-css",
+    name: "css-seasoning",
     description: pkg.description,
     license: pkg.license,
     author: "soranoo (Freeman)",
     bin: {
-      "refine-css": "./bin/cli.mjs",
+      "css-seasoning": "./bin/cli.mjs",
     },
     keywords: ["css", "transform", "deno"],
     repository: {
       type: "git",
-      url: "git+https://github.com/soranoo/refine-css.git",
+      url: "git+https://github.com/soranoo/css-seasoning.git",
     },
     bugs: {
-      url: "https://github.com/soranoo/refine-css/issues",
+      url: "https://github.com/soranoo/css-seasoning/issues",
     },
   },
   postBuild() {

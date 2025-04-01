@@ -12,7 +12,7 @@ import { transform } from "@/index.ts";
  */
 const showHelp = () => {
   console.log(`
-refine-css - A tool to transform CSS selectors and custom properties
+css-seasoning - A tool to transform CSS selectors and custom properties
 
 USAGE:
   deno run --allow-env --allow-read --allow-write main.ts [OPTIONS] <input-file>
@@ -31,9 +31,9 @@ OPTIONS:
   --save-tables <file>         Save the conversion tables to a JSON file (prints to stderr if not specified)
 
 EXAMPLES:
-  refine-css styles.css
-  refine-css -o output.css -m minimal styles.css
-  refine-css --mode debug --debug-symbol "_d_" styles.css
+  css-seasoning styles.css
+  css-seasoning -o output.css -m minimal styles.css
+  css-seasoning --mode debug --debug-symbol "_d_" styles.css
   `);
 };
 

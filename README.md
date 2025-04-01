@@ -1,12 +1,12 @@
-# REFINE-CSS
+# CSS-SEASONING
 
 Project starts on 02-03-2025
 
-![Tests](https://github.com/soranoo/refine-css/actions/workflows/auto-test.yml/badge.svg) [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)&nbsp;&nbsp;&nbsp;[![Donation](https://img.shields.io/static/v1?label=Donation&message=❤️&style=social)](https://github.com/soranoo/Donation)
+![Tests](https://github.com/soranoo/css-seasoning/actions/workflows/auto-test.yml/badge.svg) [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)&nbsp;&nbsp;&nbsp;[![Donation](https://img.shields.io/static/v1?label=Donation&message=❤️&style=social)](https://github.com/soranoo/Donation)
 
-<!-- [![banner](./docs/imgs/banner.png)](https://github.com/soranoo/refine-css) -->
+<!-- [![banner](./docs/imgs/banner.png)](https://github.com/soranoo/css-seasoning) -->
 
-[![npm version](https://img.shields.io/npm/v/refine-css?color=red&style=flat)](https://www.npmjs.com/package/refine-css) [![npm downloads](https://img.shields.io/npm/dt/refine-css?color=blue&style=flat)](https://www.npmjs.com/package/refine-css)
+[![npm version](https://img.shields.io/npm/v/css-seasoning?color=red&style=flat)](https://www.npmjs.com/package/css-seasoning) [![npm downloads](https://img.shields.io/npm/dt/css-seasoning?color=blue&style=flat)](https://www.npmjs.com/package/css-seasoning)
 
 <!-- [![JSR](https://jsr.io/badges/@<scope>/<package>)](https://jsr.io/@<scope>/<package>) [![JSR Score](https://jsr.io/badges/@<scope>/<package>/score)](https://jsr.io/@<scope>/<package>) -->
 
@@ -15,13 +15,18 @@ Project starts on 02-03-2025
 
 ---
 
-Visit the [GitHub Page](https://github.com/soranoo/refine-css/) for better reading experience and latest docs. 😎
+Visit the [GitHub Page](https://github.com/soranoo/css-seasoning/) for better reading experience and latest docs. 😎
 
 --- 
 
 A tool deeply inspired by [google/postcss-rename](https://github.com/google/postcss-rename) but not dependent on PostCSS. 
 
-Refine-CSS is designed to transform CSS class names, IDs, and custom properties into smaller, obfuscated alternatives.
+CSS-SEASONING is designed seasoning your CSS files by transforming selectors and custom properties into hash values (multiple modes available). It can be used to obfuscate CSS files, reduce file size, or simply make your CSS more readable.
+
+Let's say goodbye to long and complex CSS selectors and custom properties, and hello to a cleaner, more efficient CSS!
+
+> [!NOTE]\
+> This package does not provide tool to change your HTML or JS files. It only transforms CSS files. You need to use other tools to change your HTML or JS files to match the transformed CSS.
 
 Give me a ⭐ if you like it.
 
@@ -46,6 +51,7 @@ Give me a ⭐ if you like it.
 - **Custom seed support**: Use a specific seed to generate consistent hashes
 - **Conversion tables**: Save and reuse conversion mappings between runs
 - **Easy-to-use CLI**: Simple command-line interface for quick transformations
+- **CSS optimisation**: Improve the efficiency of your CSS code
 
 ## 🚀 Getting Started
 
@@ -54,10 +60,10 @@ Give me a ⭐ if you like it.
 #### Using npm
 
 ```bash
-npm install -D refine-css
+npm install -D css-seasoning
 ```
 
-Visit the [npm](https://www.npmjs.com/package/refine-css) page for more information.
+Visit the [npm](https://www.npmjs.com/package/css-seasoning) page for more information.
 
 ### Usage 🎉
 
@@ -65,7 +71,7 @@ Visit the [npm](https://www.npmjs.com/package/refine-css) page for more informat
 
 ```bash
 # Using the CLI (if installed via npm)
-refine-css styles.css
+css-seasoning styles.css
 
 # Using Deno directly
 deno run cli styles.css
@@ -77,7 +83,7 @@ deno run cli styles.css
 #### Example: Using Minimal Mode
 
 ```bash
-refine-css styles.css -m minimal
+css-seasoning styles.css -m minimal
 ```
 
 Input (`styles.css`):
@@ -110,7 +116,7 @@ Prettied Output:
 #### Example: Using Debug Mode
 
 ```bash
-refine-css styles.css -m debug -d "__DEBUG__" -p "prefix-" -s "-suffix"
+css-seasoning styles.css -m debug -d "__DEBUG__" -p "prefix-" -s "-suffix"
 ```
 
 Prettied Output:
@@ -131,7 +137,7 @@ Prettied Output:
 #### Example: Saving Conversion Tables
 
 ```bash
-refine-css styles.css --save-tables tables.json
+css-seasoning styles.css --save-tables tables.json
 ```
 
 This generates a conversion table file (`tables.json`) that maps original selectors and custom properties to their transformed versions:
@@ -152,7 +158,7 @@ This generates a conversion table file (`tables.json`) that maps original select
 #### Example: Using Saved Conversion Tables
 
 ```bash
-refine-css new-styles.css --conversion-tables tables.json
+css-seasoning new-styles.css --conversion-tables tables.json
 ```
 
 This ensures that the same mappings are used across multiple CSS files or builds.
@@ -171,10 +177,10 @@ This ensures that the same mappings are used across multiple CSS files or builds
 
 ### All options in one place 📦
 
-If you're using refine-css as a library:
+If you're using css-seasoning as a library:
 
 ```ts
-import { transform } from "refine-css";
+import { transform } from "css-seasoning";
 
 const result = transform({
   css: inputCss,
@@ -202,7 +208,7 @@ console.log(result.conversionTables);   // The generated/used conversion tables
 The CLI provides a convenient way to transform CSS files from the command line.
 
 ```bash
-refine-css [OPTIONS] <input-file>
+css-seasoning [OPTIONS] <input-file>
 ```
 
 ### Options
@@ -225,17 +231,17 @@ refine-css [OPTIONS] <input-file>
 
 ```bash
 # Basic usage with default options
-refine-css styles.css
+css-seasoning styles.css
 
 # Use minimal mode and specify output file
-refine-css -o output.css -m minimal styles.css
+css-seasoning -o output.css -m minimal styles.css
 
 # Debug mode with custom debug symbol
-refine-css --mode debug --debug-symbol "_d_" styles.css
+css-seasoning --mode debug --debug-symbol "_d_" styles.css
 
 # Save and reuse conversion tables
-refine-css styles.css --save-tables tables.json
-refine-css other.css --conversion-tables tables.json
+css-seasoning styles.css --save-tables tables.json
+css-seasoning other.css --conversion-tables tables.json
 ```
 
 ## ⭐ TODO
@@ -300,7 +306,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=soranoo/refine-css&type=Date)](https://star-history.com/#soranoo/refine-css&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=soranoo/css-seasoning&type=Date)](https://star-history.com/#soranoo/css-seasoning&Date)
 
 ## ☕ Donation
 
