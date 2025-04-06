@@ -21,7 +21,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Setup Deno environment
       - name: Setup Deno
@@ -31,6 +31,16 @@ jobs:
 
       - name: Install Dependencies
         run: deno install
+
+      # Check if the code is formatted according to Deno's default
+      # formatting conventions.
+      - name: Check Formatting
+        run: deno fmt --check
+
+      # Scan the code for syntax errors and style issues. If
+      # you want to use a custom linter configuration you can add a configuration file with --config 
+      - name: Run Linter
+        run: deno lint --unstable --config .deno_lint.json
 
       - name: Run Tests
         run: deno run test
