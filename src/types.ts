@@ -1,6 +1,5 @@
 import type {
   CustomAtRules,
-  TransformAttributeOptions,
   TransformOptions,
 } from "lightningcss-wasm";
 

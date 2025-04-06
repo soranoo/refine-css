@@ -48,16 +48,19 @@ Deno.test("parseSelectorComponent parses CSS selectors correctly", () => {
   const classSelector = parseSelectorComponent(".test");
   assertEquals(classSelector.length, 1);
   assertEquals(classSelector[0].type, "class");
+  // deno-lint-ignore no-explicit-any
   assertEquals((classSelector[0] as any).name, "test");
 
   const idSelector = parseSelectorComponent("#test");
   assertEquals(idSelector.length, 1);
   assertEquals(idSelector[0].type, "id");
+  // deno-lint-ignore no-explicit-any
   assertEquals((idSelector[0] as any).name, "test");
 
   const typeSelector = parseSelectorComponent("div");
   assertEquals(typeSelector.length, 1);
   assertEquals(typeSelector[0].type, "type");
+  // deno-lint-ignore no-explicit-any
   assertEquals((typeSelector[0] as any).name, "div");
 
   const universalSelector = parseSelectorComponent("*");
@@ -67,6 +70,7 @@ Deno.test("parseSelectorComponent parses CSS selectors correctly", () => {
   const attributeSelector = parseSelectorComponent("[data-test]");
   assertEquals(attributeSelector.length, 1);
   assertEquals(attributeSelector[0].type, "attribute");
+  // deno-lint-ignore no-explicit-any
   assertEquals((attributeSelector[0] as any).name, "data-test");
 });
 
