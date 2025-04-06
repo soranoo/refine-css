@@ -13,7 +13,7 @@ permissions:
   id-token: write # to enable use of OIDC for npm provenance
 
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,7 +30,22 @@ jobs:
 
       - name: Run tests
         run: deno run test
-        
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Setup Deno environment
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: deno install
+
       - name: Build NPM package
         run: deno run build:npm
 

@@ -1,22 +1,17 @@
-import type {
-  CustomAtRules,
-  Selector,
-  Visitor,
-} from "lightningcss-wasm";
+import type { CustomAtRules, Selector, Visitor } from "lightningcss-wasm";
 import type { ConversionTable, Transform } from "@/types.ts";
 
 import init, { transform as lightningcssTransform } from "lightningcss-wasm";
 import {
-  cssEscape,
-  numberToLetters,
-  stringifySelectorComponent,
-  parseSelectorComponent,
-  isNArray,
-  cssUnescape,
-  generateHash,
-  initializeHash,
+	cssEscape,
+	cssUnescape,
+	generateHash,
+	initializeHash,
+	isNArray,
+	numberToLetters,
+	parseSelectorComponent,
+	stringifySelectorComponent,
 } from "@/utils.ts";
-import { stringifySelectorComponentComplex } from "../dist/npm/esm/src/utils.js";
 
 await init();
 await initializeHash();
@@ -30,97 +25,112 @@ await initializeHash();
  * @returns The processed selector.
  */
 const INTERNAL_handleSelector = (
-  selector: Selector,
-  selectorConversionTable: ConversionTable,
-  conv: (...props: Parameters<ReturnType<typeof createConversionFunction>>) => string | Selector,
+	selector: Selector,
+	selectorConversionTable: ConversionTable,
+	conv: (
+		...props: Parameters<ReturnType<typeof createConversionFunction>>
+	) => string | Selector,
 ): Selector | Selector[] => {
-  const newSelector = selector.map((component): Selector | Selector[] | (Selector | Selector[])[] => {
-    switch (component.type) {
-      case "type": { // eg. div, span, etc.
-        return [component];
-      }
-      case "id":
-      case "class": {
-        const componentWithType = stringifySelectorComponent(component);
-        if (componentWithType) {
-          const convertedSelector = conv(componentWithType, selectorConversionTable, {
-            onNewValueBeforeAdd: (originalValue, valueToSave) => {
-              switch (originalValue.slice(0, 1)) {
-                case "#": // If is an id
-                  return `#${valueToSave}`;
-                case ".": // If is a class
-                  return `.${valueToSave}`;
-                default:
-                  return valueToSave;
-              }
-            }
-          });
-          if (typeof convertedSelector === "string") {
-            if (convertedSelector.slice(0, 1) === "." ||
-            convertedSelector.slice(0, 1) === "#") {
-              component.name = convertedSelector.slice(1);
-            } else {
-              component.name = convertedSelector;
-            }
-          } else {
-            return convertedSelector;
-          }
-        } else {
-          throw new Error(
-            `Unhandled component stringify: ${JSON.stringify(component)
-            }, the "${component.type}" type should be handled.`,
-          );
-        }
-        return [component];
-      }
-      case "pseudo-class": // eg. :hover, :active, etc.
-        switch (component.kind) {
-          case "nth-child":
-          case "nth-last-child":
-            component?.of?.map((sel) => {
-              return INTERNAL_handleSelector(
-                sel,
-                selectorConversionTable, // <- passing reference
-                conv,
-              );
-            });
-            break;
-          case "host": // eg. :host, :host(.class)
-            if (component.selectors) {
-              INTERNAL_handleSelector(
-                component.selectors, // <- passing reference
-                selectorConversionTable,
-                conv,
-              );
-            }
-            return [component];
-          case "not":
-          case "where":
-          case "is":
-          case "any":
-          case "has": {
-            const s = component.selectors.map((sel) => {
-              return INTERNAL_handleSelector(sel, selectorConversionTable, conv)
-            });
-            if (isNArray(s, 2)) {
-              component.selectors = s as Selector[];
-              return [component];
-            }
-            return s;
-          }
-          default:
-            console.log(`[unhandled] pseudo-class: ${component.kind}`);
-            break;
-        }
-        return [component];
-      default:
-        console.log(`[unhandled] type: ${component.type}`);
-        return [component];
-    }
-  });
+	const newSelector = selector.map(
+		(component): Selector | Selector[] | (Selector | Selector[])[] => {
+			switch (component.type) {
+				case "type": { // eg. div, span, etc.
+					return [component];
+				}
+				case "id":
+				case "class": {
+					const componentWithType = stringifySelectorComponent(component);
+					if (componentWithType) {
+						const convertedSelector = conv(
+							componentWithType,
+							selectorConversionTable,
+							{
+								onNewValueBeforeAdd: (originalValue, valueToSave) => {
+									switch (originalValue.slice(0, 1)) {
+										case "#": // If is an id
+											return `#${valueToSave}`;
+										case ".": // If is a class
+											return `.${valueToSave}`;
+										default:
+											return valueToSave;
+									}
+								},
+							},
+						);
+						if (typeof convertedSelector === "string") {
+							if (
+								convertedSelector.slice(0, 1) === "." ||
+								convertedSelector.slice(0, 1) === "#"
+							) {
+								component.name = convertedSelector.slice(1);
+							} else {
+								component.name = convertedSelector;
+							}
+						} else {
+							return convertedSelector;
+						}
+					} else {
+						throw new Error(
+							`Unhandled component stringify: ${
+								JSON.stringify(component)
+							}, the "${component.type}" type should be handled.`,
+						);
+					}
+					return [component];
+				}
+				case "pseudo-class": // eg. :hover, :active, etc.
+					switch (component.kind) {
+						case "nth-child":
+						case "nth-last-child":
+							component?.of?.map((sel) => {
+								return INTERNAL_handleSelector(
+									sel,
+									selectorConversionTable, // <- passing reference
+									conv,
+								);
+							});
+							break;
+						case "host": // eg. :host, :host(.class)
+							if (component.selectors) {
+								INTERNAL_handleSelector(
+									component.selectors, // <- passing reference
+									selectorConversionTable,
+									conv,
+								);
+							}
+							return [component];
+						case "not":
+						case "where":
+						case "is":
+						case "any":
+						case "has": {
+							const s = component.selectors.map((sel) => {
+								return INTERNAL_handleSelector(
+									sel,
+									selectorConversionTable,
+									conv,
+								);
+							});
+							if (isNArray(s, 2)) {
+								component.selectors = s as Selector[];
+								return [component];
+							}
+							return s;
+						}
+						default:
+							console.log(`[unhandled] pseudo-class: ${component.kind}`);
+							break;
+					}
+					return [component];
+				default:
+					console.log(`[unhandled] type: ${component.type}`);
+					return [component];
+			}
+		},
+	);
 
-  // Flat the array that more than 2 levels deep
-  return newSelector.flat(3);
+	// Flat the array that more than 2 levels deep
+	return newSelector.flat(3);
 };
 
 /**
@@ -134,102 +144,138 @@ const INTERNAL_handleSelector = (
  * @returns A function that converts a string using the given mode.
  */
 const createConversionFunction = (
-  mode: "hash" | "minimal" | "debug",
-  debugSymbol: string,
-  prefix: string,
-  suffix: string,
-  seed?: number,
+	mode: "hash" | "minimal" | "debug",
+	debugSymbol: string,
+	prefix: string,
+	suffix: string,
+	seed?: number,
 ): (
-  value: string, 
-  conversionTable: Record<string, string>,
-  options?: {
-    /**
-     * Callback function to handle existing values in the conversion table.
-     * 
-     * @param originalValue - The original (not escaped) value being converted.
-     * @param convertToValue - The value (escaped) to which the original value is being converted.
-     * @returns The converted value.
-     */
-    onExistenceFound?: (originalValue: string, convertToValue: string) => string,
-  
-    /**
-     * Callback function to handle new values before adding them to the conversion table.
-     * 
-     * @param originalValue - The original value (not escaped) being converted.
-     * @param valueToSave - The new value (not escaped) being added to the conversion table.
-     * @returns The new value to be added to the conversion table.
-     */
-    onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
-  },
+	value: string,
+	conversionTable: Record<string, string>,
+	options?: {
+		/**
+		 * Callback function to handle existing values in the conversion table.
+		 *
+		 * @param originalValue - The original (not escaped) value being converted.
+		 * @param convertToValue - The value (escaped) to which the original value is being converted.
+		 * @returns The converted value.
+		 */
+		onExistenceFound?: (
+			originalValue: string,
+			convertToValue: string,
+		) => string;
+
+		/**
+		 * Callback function to handle new values before adding them to the conversion table.
+		 *
+		 * @param originalValue - The original value (not escaped) being converted.
+		 * @param valueToSave - The new value (not escaped) being added to the conversion table.
+		 * @returns The new value to be added to the conversion table.
+		 */
+		onNewValueBeforeAdd?: (
+			originalValue: string,
+			valueToSave: string,
+		) => string;
+	},
 ) => string => {
-  if (mode === "minimal") {
-    let minimalCounter = 0;
-    return (
-      value: string, 
-      conversionTable: Record<string, string>,
-      options?: {
-        onExistenceFound?: (originalValue: string, convertToValue: string) => string,
-        onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
-      },
-    ) => {
-      const escaped = cssEscape(value);
-      if (conversionTable[escaped]) {
-        const convertToValue = conversionTable[escaped];
-        if (options?.onExistenceFound) {
-          return options.onExistenceFound(value, convertToValue);
-        }
-        return convertToValue;
-      }
-      const newVal = prefix + numberToLetters(minimalCounter) + suffix;
-      minimalCounter++;
-      conversionTable[escaped] = cssEscape(options?.onNewValueBeforeAdd ? options.onNewValueBeforeAdd(value, newVal) : newVal);
-      return newVal;
-    };
-  } else if (mode === "debug") {
-    return (
-      value: string, 
-      conversionTable: Record<string, string>,
-      options?: {
-        onExistenceFound?: (originalValue: string, convertToValue: string) => string,
-        onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
-      }
-    ) => {
-      const escaped = cssEscape(value);
-      if (conversionTable[escaped]) {
-        const convertToValue = conversionTable[escaped];
-        if (options?.onExistenceFound) {
-          return options.onExistenceFound(value, convertToValue);
-        }
-        return convertToValue;
-      }
-      const newVal = debugSymbol + prefix + value + suffix;
-      conversionTable[escaped] = cssEscape(options?.onNewValueBeforeAdd ? options.onNewValueBeforeAdd(value, newVal) : newVal);
-      return newVal;
-    };
-  } else {
-    // hash mode
-    const localSeed = seed;
-    return (
-      value: string, 
-      conversionTable: Record<string, string>,
-      options?: {
-        onExistenceFound?: (originalValue: string, convertToValue: string) => string,
-        onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
-      }
-    ) => {
-      const escaped = cssEscape(value);
-      if (conversionTable[escaped]) {
-        const convertToValue = conversionTable[escaped];
-        if (options?.onExistenceFound) {
-          return options.onExistenceFound(value, convertToValue);
-        }
-        return convertToValue;
-      }
-      const hashValue = prefix + generateHash(value, localSeed) + suffix;
-      conversionTable[escaped] = cssEscape(options?.onNewValueBeforeAdd ? options.onNewValueBeforeAdd(value, hashValue) : hashValue);
-      return hashValue;
-    };
-  }
+	if (mode === "minimal") {
+		let minimalCounter = 0;
+		return (
+			value: string,
+			conversionTable: Record<string, string>,
+			options?: {
+				onExistenceFound?: (
+					originalValue: string,
+					convertToValue: string,
+				) => string;
+				onNewValueBeforeAdd?: (
+					originalValue: string,
+					valueToSave: string,
+				) => string;
+			},
+		) => {
+			const escaped = cssEscape(value);
+			if (conversionTable[escaped]) {
+				const convertToValue = conversionTable[escaped];
+				if (options?.onExistenceFound) {
+					return options.onExistenceFound(value, convertToValue);
+				}
+				return convertToValue;
+			}
+			const newVal = prefix + numberToLetters(minimalCounter) + suffix;
+			minimalCounter++;
+			conversionTable[escaped] = cssEscape(
+				options?.onNewValueBeforeAdd
+					? options.onNewValueBeforeAdd(value, newVal)
+					: newVal,
+			);
+			return newVal;
+		};
+	} else if (mode === "debug") {
+		return (
+			value: string,
+			conversionTable: Record<string, string>,
+			options?: {
+				onExistenceFound?: (
+					originalValue: string,
+					convertToValue: string,
+				) => string;
+				onNewValueBeforeAdd?: (
+					originalValue: string,
+					valueToSave: string,
+				) => string;
+			},
+		) => {
+			const escaped = cssEscape(value);
+			if (conversionTable[escaped]) {
+				const convertToValue = conversionTable[escaped];
+				if (options?.onExistenceFound) {
+					return options.onExistenceFound(value, convertToValue);
+				}
+				return convertToValue;
+			}
+			const newVal = debugSymbol + prefix + value + suffix;
+			conversionTable[escaped] = cssEscape(
+				options?.onNewValueBeforeAdd
+					? options.onNewValueBeforeAdd(value, newVal)
+					: newVal,
+			);
+			return newVal;
+		};
+	} else {
+		// hash mode
+		const localSeed = seed;
+		return (
+			value: string,
+			conversionTable: Record<string, string>,
+			options?: {
+				onExistenceFound?: (
+					originalValue: string,
+					convertToValue: string,
+				) => string;
+				onNewValueBeforeAdd?: (
+					originalValue: string,
+					valueToSave: string,
+				) => string;
+			},
+		) => {
+			const escaped = cssEscape(value);
+			if (conversionTable[escaped]) {
+				const convertToValue = conversionTable[escaped];
+				if (options?.onExistenceFound) {
+					return options.onExistenceFound(value, convertToValue);
+				}
+				return convertToValue;
+			}
+			const hashValue = prefix + generateHash(value, localSeed) + suffix;
+			conversionTable[escaped] = cssEscape(
+				options?.onNewValueBeforeAdd
+					? options.onNewValueBeforeAdd(value, hashValue)
+					: hashValue,
+			);
+			return hashValue;
+		};
+	}
 };
 
 /**
@@ -241,29 +287,29 @@ const createConversionFunction = (
  * @returns A visitor object compatible with lightningcss.
  */
 const INTERNAL_buildVisitor = (
-  convertFunc: ReturnType<typeof createConversionFunction>,
-  selectorConversionTable: ConversionTable,
-  identConversionTable: ConversionTable,
+	convertFunc: ReturnType<typeof createConversionFunction>,
+	selectorConversionTable: ConversionTable,
+	identConversionTable: ConversionTable,
 ) => ({
-  Selector(selector: Selector): Selector | Selector[] {
-    return INTERNAL_handleSelector(
-      selector,
-      selectorConversionTable,
-      (value: string, conversionTable: Record<string, string>, ...props) => {
-        const escapedValue = cssEscape(value);
-        if (selectorConversionTable[escapedValue]) {
-          return parseSelectorComponent( // <- Allow to convert to complex selector
-            cssUnescape(selectorConversionTable[escapedValue])
-          );
-        }
-        return convertFunc(value, conversionTable, ...props);
-      }
-    );
-  },
-  DashedIdent(ident: string) {
-    const value = ident.slice(2); // remove the '--' prefix
-    return `--${convertFunc(value, identConversionTable)}`;
-  },
+	Selector(selector: Selector): Selector | Selector[] {
+		return INTERNAL_handleSelector(
+			selector,
+			selectorConversionTable,
+			(value: string, conversionTable: Record<string, string>, ...props) => {
+				const escapedValue = cssEscape(value);
+				if (selectorConversionTable[escapedValue]) {
+					return parseSelectorComponent( // <- Allow to convert to complex selector
+						cssUnescape(selectorConversionTable[escapedValue]),
+					);
+				}
+				return convertFunc(value, conversionTable, ...props);
+			},
+		);
+	},
+	DashedIdent(ident: string) {
+		const value = ident.slice(2); // remove the '--' prefix
+		return `--${convertFunc(value, identConversionTable)}`;
+	},
 } satisfies Visitor<CustomAtRules>);
 
 /**
@@ -281,52 +327,52 @@ const INTERNAL_buildVisitor = (
  * @returns An object containing the transformed CSS and conversion tables.
  */
 export const transform: Transform = ({
-  css,
-  mode = "hash",
-  debugSymbol = "_",
-  prefix = "",
-  suffix = "",
-  seed,
-  conversionTables,
-  lightningcssOptions = {
-    minify: true,
-  },
+	css,
+	mode = "hash",
+	debugSymbol = "_",
+	prefix = "",
+	suffix = "",
+	seed,
+	conversionTables,
+	lightningcssOptions = {
+		minify: true,
+	},
 }) => {
-  // Use user provided conversion tables if available, otherwise create new ones
-  const selectorConversionTable: ConversionTable = conversionTables?.selector ??
-    {};
-  const identConversionTable: ConversionTable = conversionTables?.ident ?? {};
+	// Use user provided conversion tables if available, otherwise create new ones
+	const selectorConversionTable: ConversionTable = conversionTables?.selector ??
+		{};
+	const identConversionTable: ConversionTable = conversionTables?.ident ?? {};
 
-  // Create conversion function based on the selected mode and custom seed
-  const convertFunc = createConversionFunction(
-    mode,
-    debugSymbol,
-    prefix,
-    suffix,
-    seed,
-  );
+	// Create conversion function based on the selected mode and custom seed
+	const convertFunc = createConversionFunction(
+		mode,
+		debugSymbol,
+		prefix,
+		suffix,
+		seed,
+	);
 
-  // Build visitor for lightningcss.Transform using provided conversion tables
-  const visitor = INTERNAL_buildVisitor(
-    convertFunc,
-    selectorConversionTable,
-    identConversionTable,
-  );
+	// Build visitor for lightningcss.Transform using provided conversion tables
+	const visitor = INTERNAL_buildVisitor(
+		convertFunc,
+		selectorConversionTable,
+		identConversionTable,
+	);
 
-  const { code, ...otherOutput } = lightningcssTransform({
-    filename: "style.css",
-    code: new TextEncoder().encode(css),
-    visitor,
-    ...lightningcssOptions,
-  });
+	const { code, ...otherOutput } = lightningcssTransform({
+		filename: "style.css",
+		code: new TextEncoder().encode(css),
+		visitor,
+		...lightningcssOptions,
+	});
 
-  const newCss = new TextDecoder().decode(code);
-  return {
-    css: newCss,
-    conversionTables: {
-      selector: selectorConversionTable,
-      ident: identConversionTable,
-    },
-    ...otherOutput,
-  };
+	const newCss = new TextDecoder().decode(code);
+	return {
+		css: newCss,
+		conversionTables: {
+			selector: selectorConversionTable,
+			ident: identConversionTable,
+		},
+		...otherOutput,
+	};
 };

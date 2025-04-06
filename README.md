@@ -298,7 +298,7 @@ Thank you to all the sponsors who support this project.
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you find a bug or have a feature request, please open an issue. If you want to contribute code, please fork the repository and run `deno run test` before submit a pull request.
+Contributions are welcome! If you find a bug or have a feature request, please open an issue. If you want to contribute code, please fork the repository and run `deno run fmt` & `deno run test` before submit a pull request.
 
 ## 📝 License
 
