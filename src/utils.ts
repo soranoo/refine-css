@@ -1,7 +1,4 @@
-import type {
-  Selector,
-  SelectorComponent,
-} from "lightningcss-wasm";
+import type { Selector, SelectorComponent } from "lightningcss-wasm";
 import { transform as lightningcssTransform } from "lightningcss-wasm";
 import xxhash from "xxhash-wasm";
 
@@ -12,11 +9,11 @@ let hashInstance: Awaited<ReturnType<typeof xxhash>> | null = null;
  * Initializes the xxhash instance for use in generating hash values.
  */
 export const initializeHash = async () => {
-  if (!hashInstance) {
-    hashInstance = await xxhash();
-  }
-  return hashInstance;
-}
+	if (!hashInstance) {
+		hashInstance = await xxhash();
+	}
+	return hashInstance;
+};
 
 // Character codes for lowercase a-z range
 const LOWERCASE_A_CHARCODE = 97;
@@ -24,42 +21,46 @@ const LOWERCASE_Z_CHARCODE = 122;
 
 /**
  * Generates a hash value from a string.
- * 
+ *
  * @param value - The string to hash.
  * @param seed - Optional seed for the hash function.
  * @returns A hash value with a lowercase first character.
- * 
+ *
  * @example
  * ```ts
  * generateHash("example", 1); // Returns a consistent hash that starts with lowercase
  * ```
  */
 export const generateHash = (value: string, seed?: number): string => {
-  if (!hashInstance) {
-    throw new Error("Hash instance not initialized. Call initializeHash() first.");
-  }
-  //? Hash start with number will break the CSS selector
+	if (!hashInstance) {
+		throw new Error(
+			"Hash instance not initialized. Call initializeHash() first.",
+		);
+	}
+	//? Hash start with number will break the CSS selector
 
-  let hashValue = hashInstance.h32ToString(value, seed);
-  const firstCharCode = hashValue.charCodeAt(0);
+	let hashValue = hashInstance.h32ToString(value, seed);
+	const firstCharCode = hashValue.charCodeAt(0);
 
-  // If the first character is not lowercase, map to lowercase range of a-z
-  if (firstCharCode < LOWERCASE_A_CHARCODE || firstCharCode > LOWERCASE_Z_CHARCODE) {
-    const newCharCode = LOWERCASE_A_CHARCODE + (firstCharCode % 26);
-    hashValue = String.fromCharCode(newCharCode) + hashValue.slice(1);
-  }
+	// If the first character is not lowercase, map to lowercase range of a-z
+	if (
+		firstCharCode < LOWERCASE_A_CHARCODE || firstCharCode > LOWERCASE_Z_CHARCODE
+	) {
+		const newCharCode = LOWERCASE_A_CHARCODE + (firstCharCode % 26);
+		hashValue = String.fromCharCode(newCharCode) + hashValue.slice(1);
+	}
 
-  return hashValue;
+	return hashValue;
 };
 
 /**
  * Escapes special characters in a CSS string.
- * 
+ *
  * @param value - The string to escape.
  * @returns The escaped string.
  *
  * @source https://github.com/tailwindlabs/tailwindcss/blob/7d51e38d8c4a5cba20face7384be9629c9dcc3c8/packages/tailwindcss/src/utils/escape.ts#L2-L73
- * 
+ *
  * @example
  * ```ts
  * cssEscape("-"); // "\\-"
@@ -70,86 +71,86 @@ export const generateHash = (value: string, seed?: number): string => {
  * ```
  */
 export const cssEscape = (value: string): string => {
-  const string = String(value);
-  const length = string.length;
-  let index = -1;
-  let codeUnit: number;
-  let result = "";
-  const firstCodeUnit = string.charCodeAt(0);
+	const string = String(value);
+	const length = string.length;
+	let index = -1;
+	let codeUnit: number;
+	let result = "";
+	const firstCodeUnit = string.charCodeAt(0);
 
-  if (
-    // If the character is the first character and is a `-` (U+002D), and
-    // there is no second character, […]
-    length === 1 &&
-    firstCodeUnit === 0x002d
-  ) {
-    return `\\${string}`;
-  }
+	if (
+		// If the character is the first character and is a `-` (U+002D), and
+		// there is no second character, […]
+		length === 1 &&
+		firstCodeUnit === 0x002d
+	) {
+		return `\\${string}`;
+	}
 
-  while (++index < length) {
-    codeUnit = string.charCodeAt(index);
-    // Note: there’s no need to special-case astral symbols, surrogate
-    // pairs, or lone surrogates.
+	while (++index < length) {
+		codeUnit = string.charCodeAt(index);
+		// Note: there’s no need to special-case astral symbols, surrogate
+		// pairs, or lone surrogates.
 
-    // If the character is NULL (U+0000), then the REPLACEMENT CHARACTER
-    // (U+FFFD).
-    if (codeUnit === 0x0000) {
-      result += "\uFFFD";
-      continue;
-    }
+		// If the character is NULL (U+0000), then the REPLACEMENT CHARACTER
+		// (U+FFFD).
+		if (codeUnit === 0x0000) {
+			result += "\uFFFD";
+			continue;
+		}
 
-    if (
-      // If the character is in the range [\1-\1F] (U+0001 to U+001F) or is
-      // U+007F, […]
-      (codeUnit >= 0x0001 && codeUnit <= 0x001f) ||
-      codeUnit === 0x007f ||
-      // If the character is the first character and is in the range [0-9]
-      // (U+0030 to U+0039), […]
-      (index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
-      // If the character is the second character and is in the range [0-9]
-      // (U+0030 to U+0039) and the first character is a `-` (U+002D), […]
-      (index === 1 &&
-        codeUnit >= 0x0030 &&
-        codeUnit <= 0x0039 &&
-        firstCodeUnit === 0x002d)
-    ) {
-      // https://drafts.csswg.org/cssom/#escape-a-character-as-code-point
-      result += `\\${codeUnit.toString(16)} `;
-      continue;
-    }
+		if (
+			// If the character is in the range [\1-\1F] (U+0001 to U+001F) or is
+			// U+007F, […]
+			(codeUnit >= 0x0001 && codeUnit <= 0x001f) ||
+			codeUnit === 0x007f ||
+			// If the character is the first character and is in the range [0-9]
+			// (U+0030 to U+0039), […]
+			(index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+			// If the character is the second character and is in the range [0-9]
+			// (U+0030 to U+0039) and the first character is a `-` (U+002D), […]
+			(index === 1 &&
+				codeUnit >= 0x0030 &&
+				codeUnit <= 0x0039 &&
+				firstCodeUnit === 0x002d)
+		) {
+			// https://drafts.csswg.org/cssom/#escape-a-character-as-code-point
+			result += `\\${codeUnit.toString(16)} `;
+			continue;
+		}
 
-    // If the character is not handled by one of the above rules and is
-    // greater than or equal to U+0080, is `-` (U+002D) or `_` (U+005F), or
-    // is in one of the ranges [0-9] (U+0030 to U+0039), [A-Z] (U+0041 to
-    // U+005A), or [a-z] (U+0061 to U+007A), […]
-    if (
-      codeUnit >= 0x0080 ||
-      codeUnit === 0x002d ||
-      codeUnit === 0x005f ||
-      (codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
-      (codeUnit >= 0x0041 && codeUnit <= 0x005a) ||
-      (codeUnit >= 0x0061 && codeUnit <= 0x007a)
-    ) {
-      // the character itself
-      result += string.charAt(index);
-      continue;
-    }
+		// If the character is not handled by one of the above rules and is
+		// greater than or equal to U+0080, is `-` (U+002D) or `_` (U+005F), or
+		// is in one of the ranges [0-9] (U+0030 to U+0039), [A-Z] (U+0041 to
+		// U+005A), or [a-z] (U+0061 to U+007A), […]
+		if (
+			codeUnit >= 0x0080 ||
+			codeUnit === 0x002d ||
+			codeUnit === 0x005f ||
+			(codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+			(codeUnit >= 0x0041 && codeUnit <= 0x005a) ||
+			(codeUnit >= 0x0061 && codeUnit <= 0x007a)
+		) {
+			// the character itself
+			result += string.charAt(index);
+			continue;
+		}
 
-    // Otherwise, the escaped character.
-    // https://drafts.csswg.org/cssom/#escape-a-character
-    result += `\\${string.charAt(index)}`;
-  }
-  return result;
+		// Otherwise, the escaped character.
+		// https://drafts.csswg.org/cssom/#escape-a-character
+		result += `\\${string.charAt(index)}`;
+	}
+	return result;
 };
 
 /**
  * Unescapes a CSS string.
- * 
+ *
  * @param escaped - The escaped string to unescape.
  * @returns The unescaped string.
  *
  * @source https://github.com/tailwindlabs/tailwindcss/blob/7d51e38d8c4a5cba20face7384be9629c9dcc3c8/packages/tailwindcss/src/utils/escape.ts#L75-L81
- * 
+ *
  * @example
  * ```ts
  * cssUnescape("\\31 23"); // "123"
@@ -157,13 +158,12 @@ export const cssEscape = (value: string): string => {
  * ```
  */
 export const cssUnescape = (escaped: string): string => {
-  return escaped.replace(/\\([\dA-Fa-f]{1,6}[\t\n\f\r ]?|[\S\s])/g, (match) => {
-    return match.length > 2
-      ? String.fromCodePoint(Number.parseInt(match.slice(1).trim(), 16))
-      : match[1];
-  });
+	return escaped.replace(/\\([\dA-Fa-f]{1,6}[\t\n\f\r ]?|[\S\s])/g, (match) => {
+		return match.length > 2
+			? String.fromCodePoint(Number.parseInt(match.slice(1).trim(), 16))
+			: match[1];
+	});
 };
-
 
 /**
  * Converts a selector string to a selector component.
@@ -184,23 +184,22 @@ export const cssUnescape = (escaped: string): string => {
  * , it is **computationally expensive** and should be used with caution.
  */
 export const parseSelectorComponent = (
-  selectorStr: string,
+	selectorStr: string,
 ): SelectorComponent[] => {
-  const output: SelectorComponent[] = [];
-  lightningcssTransform({
-    filename: "style.css",
-    code: new TextEncoder().encode(
-      `${selectorStr}{}`, //? To make the selector valid to parse
-    ),
-    visitor: {
-      Selector(selector) {
-        output.push(...selector);
-      },
-    },
-  });
-  return output;
+	const output: SelectorComponent[] = [];
+	lightningcssTransform({
+		filename: "style.css",
+		code: new TextEncoder().encode(
+			`${selectorStr}{}`, //? To make the selector valid to parse
+		),
+		visitor: {
+			Selector(selector) {
+				output.push(...selector);
+			},
+		},
+	});
+	return output;
 };
-
 
 /**
  * Converts a selector object to a string.
@@ -220,28 +219,28 @@ export const parseSelectorComponent = (
  * This function is **computationally expensive** and should be used with caution.
  */
 export const stringifySelectorComponentComplex = (
-  selector: Selector,
+	selector: Selector,
 ): string => {
-  const placeholderCssBody = "{color:red}"; //? Make sure the body is minified
-  const { code } = lightningcssTransform({
-    filename: "style.css",
-    code: new TextEncoder().encode(
-      `#temp${placeholderCssBody}`, //? To make the selector valid to parse
-    ),
-    minify: true,
-    visitor: {
-      Selector() {
-        return selector;
-      },
-    },
-  });
+	const placeholderCssBody = "{color:red}"; //? Make sure the body is minified
+	const { code } = lightningcssTransform({
+		filename: "style.css",
+		code: new TextEncoder().encode(
+			`#temp${placeholderCssBody}`, //? To make the selector valid to parse
+		),
+		minify: true,
+		visitor: {
+			Selector() {
+				return selector;
+			},
+		},
+	});
 
-  const removePlaceholderCssBodyRegex = new RegExp(placeholderCssBody + "$");
+	const removePlaceholderCssBodyRegex = new RegExp(placeholderCssBody + "$");
 
-  return new TextDecoder().decode(code).replace(
-    removePlaceholderCssBodyRegex,
-    "",
-  );
+	return new TextDecoder().decode(code).replace(
+		removePlaceholderCssBodyRegex,
+		"",
+	);
 };
 
 /**
@@ -249,7 +248,7 @@ export const stringifySelectorComponentComplex = (
  *
  * @param selectorComponent - The selector component to convert.
  * @returns The string representation of the selector component.
- * 
+ *
  * @example
  * ```ts
  * stringifySelectorComponent({ type: "class", name: "test" }); // ".test"
@@ -260,29 +259,33 @@ export const stringifySelectorComponentComplex = (
  * stringifySelectorComponent({ type: "pseudo-element", name: "before" }); // "::before"
  * ```
  */
-export const stringifySelectorComponent = (selectorComponent: SelectorComponent) => {
-  switch (selectorComponent.type) {
-    case "attribute":
-      return stringifySelectorComponentComplex([selectorComponent]);
-    case "combinator":
-    case "namespace":
-    case "nesting":
-    case "pseudo-class":
-    case "pseudo-element":
-      return undefined;
-    case "class":
-      return `.${selectorComponent.name}`;
-    case "id":
-      return `#${selectorComponent.name}`;
-    case "type":
-      // eg. div, span, etc.
-      return selectorComponent.name;
-    case "universal":
-      return "*";
-  }
+export const stringifySelectorComponent = (
+	selectorComponent: SelectorComponent,
+) => {
+	switch (selectorComponent.type) {
+		case "attribute":
+			return stringifySelectorComponentComplex([selectorComponent]);
+		case "combinator":
+		case "namespace":
+		case "nesting":
+		case "pseudo-class":
+		case "pseudo-element":
+			return undefined;
+		case "class":
+			return `.${selectorComponent.name}`;
+		case "id":
+			return `#${selectorComponent.name}`;
+		case "type":
+			// eg. div, span, etc.
+			return selectorComponent.name;
+		case "universal":
+			return "*";
+	}
 
-  // Should never reach here
-  throw new Error(`Unknown selector type: ${JSON.stringify(selectorComponent)}`);
+	// Should never reach here
+	throw new Error(
+		`Unknown selector type: ${JSON.stringify(selectorComponent)}`,
+	);
 };
 
 /**
@@ -301,23 +304,23 @@ export const stringifySelectorComponent = (selectorComponent: SelectorComponent)
  * ```
  */
 export const numberToLetters = (num: number): string => {
-  let s = "";
-  num++; // make it 1-indexed
-  while (num > 0) {
-    const rem = (num - 1) % 26;
-    s = String.fromCharCode(97 + rem) + s;
-    num = Math.floor((num - 1) / 26);
-  }
-  return s;
+	let s = "";
+	num++; // make it 1-indexed
+	while (num > 0) {
+		const rem = (num - 1) % 26;
+		s = String.fromCharCode(97 + rem) + s;
+		num = Math.floor((num - 1) / 26);
+	}
+	return s;
 };
 
 /**
  * Checks if the given value is an array of a specific level.
- * 
+ *
  * @param arr - The value to check.
  * @param level - The level to check.
  * @returns `true` if the value is an array of the specified level, `false` otherwise.
- * 
+ *
  * @example
  * ```ts
  * isNArray([1, 2, 3], 1); // true
@@ -327,14 +330,14 @@ export const numberToLetters = (num: number): string => {
  * isNArray([[1, 2, 3]], 1); // false
  */
 export const isNArray = <T>(arr: T | T[], level: number): arr is T[] => {
-  if (!Array.isArray(arr)) {
-    return false;
-  }
-  if (level === 1) {
-    return true;
-  }
-  if (arr.length === 0) {
-    return false;
-  }
-  return isNArray(arr[0], level - 1);
+	if (!Array.isArray(arr)) {
+		return false;
+	}
+	if (level === 1) {
+		return true;
+	}
+	if (arr.length === 0) {
+		return false;
+	}
+	return isNArray(arr[0], level - 1);
 };
