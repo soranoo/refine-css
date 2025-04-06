@@ -1,7 +1,4 @@
-import type {
-  CustomAtRules,
-  TransformOptions,
-} from "lightningcss-wasm";
+import type { CustomAtRules, TransformOptions } from "lightningcss-wasm";
 
 export type ConversionTable = Record<string, string>;
 
