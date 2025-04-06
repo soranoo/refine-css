@@ -190,7 +190,7 @@ const result = transform({
   suffix: "-suffix",     // Suffix in debug mode
   seed: 123,             // Custom seed for hash generation
   conversionTables: {    // Optional reusable mappings
-    selector: { "\\.button": "preserved-class" },
+    selector: { "\\.button": "\\.preserved-class" },
     ident: { "color": "preserved-var" }
   },
   lightningcssOptions: { // Lightning CSS options

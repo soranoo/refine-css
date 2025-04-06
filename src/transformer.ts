@@ -16,6 +16,7 @@ import {
   generateHash,
   initializeHash,
 } from "@/utils.ts";
+import { stringifySelectorComponentComplex } from "../dist/npm/esm/src/utils.js";
 
 await init();
 await initializeHash();
@@ -31,7 +32,7 @@ await initializeHash();
 const INTERNAL_handleSelector = (
   selector: Selector,
   selectorConversionTable: ConversionTable,
-  conv: (value: string, conversionTable: Record<string, string>) => string | Selector,
+  conv: (...props: Parameters<ReturnType<typeof createConversionFunction>>) => string | Selector,
 ): Selector | Selector[] => {
   const newSelector = selector.map((component): Selector | Selector[] | (Selector | Selector[])[] => {
     switch (component.type) {
@@ -42,10 +43,21 @@ const INTERNAL_handleSelector = (
       case "class": {
         const componentWithType = stringifySelectorComponent(component);
         if (componentWithType) {
-          const convertedSelector = conv(componentWithType, selectorConversionTable);
+          const convertedSelector = conv(componentWithType, selectorConversionTable, {
+            onNewValueBeforeAdd: (originalValue, valueToSave) => {
+              switch (originalValue.slice(0, 1)) {
+                case "#": // If is an id
+                  return `#${valueToSave}`;
+                case ".": // If is a class
+                  return `.${valueToSave}`;
+                default:
+                  return valueToSave;
+              }
+            }
+          });
           if (typeof convertedSelector === "string") {
             if (convertedSelector.slice(0, 1) === "." ||
-              convertedSelector.slice(0, 1) === "#") {
+            convertedSelector.slice(0, 1) === "#") {
               component.name = convertedSelector.slice(1);
             } else {
               component.name = convertedSelector;
@@ -127,52 +139,94 @@ const createConversionFunction = (
   prefix: string,
   suffix: string,
   seed?: number,
-  onExistenceFound?: (originalValue: string, convertToValue: string) => string,
-): (value: string, conversionTable: Record<string, string>) => string => {
+): (
+  value: string, 
+  conversionTable: Record<string, string>,
+  options?: {
+    /**
+     * Callback function to handle existing values in the conversion table.
+     * 
+     * @param originalValue - The original (not escaped) value being converted.
+     * @param convertToValue - The value (escaped) to which the original value is being converted.
+     * @returns The converted value.
+     */
+    onExistenceFound?: (originalValue: string, convertToValue: string) => string,
+  
+    /**
+     * Callback function to handle new values before adding them to the conversion table.
+     * 
+     * @param originalValue - The original value (not escaped) being converted.
+     * @param valueToSave - The new value (not escaped) being added to the conversion table.
+     * @returns The new value to be added to the conversion table.
+     */
+    onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
+  },
+) => string => {
   if (mode === "minimal") {
     let minimalCounter = 0;
-    return (value: string, conversionTable: Record<string, string>) => {
+    return (
+      value: string, 
+      conversionTable: Record<string, string>,
+      options?: {
+        onExistenceFound?: (originalValue: string, convertToValue: string) => string,
+        onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
+      },
+    ) => {
       const escaped = cssEscape(value);
       if (conversionTable[escaped]) {
         const convertToValue = conversionTable[escaped];
-        if (onExistenceFound) {
-          return onExistenceFound(value, convertToValue);
+        if (options?.onExistenceFound) {
+          return options.onExistenceFound(value, convertToValue);
         }
         return convertToValue;
       }
-      const newVal = numberToLetters(minimalCounter);
+      const newVal = prefix + numberToLetters(minimalCounter) + suffix;
       minimalCounter++;
-      conversionTable[escaped] = newVal;
+      conversionTable[escaped] = cssEscape(options?.onNewValueBeforeAdd ? options.onNewValueBeforeAdd(value, newVal) : newVal);
       return newVal;
     };
   } else if (mode === "debug") {
-    return (value: string, conversionTable: Record<string, string>) => {
+    return (
+      value: string, 
+      conversionTable: Record<string, string>,
+      options?: {
+        onExistenceFound?: (originalValue: string, convertToValue: string) => string,
+        onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
+      }
+    ) => {
       const escaped = cssEscape(value);
       if (conversionTable[escaped]) {
         const convertToValue = conversionTable[escaped];
-        if (onExistenceFound) {
-          return onExistenceFound(value, convertToValue);
+        if (options?.onExistenceFound) {
+          return options.onExistenceFound(value, convertToValue);
         }
         return convertToValue;
       }
       const newVal = debugSymbol + prefix + value + suffix;
-      conversionTable[escaped] = newVal;
+      conversionTable[escaped] = cssEscape(options?.onNewValueBeforeAdd ? options.onNewValueBeforeAdd(value, newVal) : newVal);
       return newVal;
     };
   } else {
     // hash mode
     const localSeed = seed;
-    return (value: string, conversionTable: Record<string, string>) => {
+    return (
+      value: string, 
+      conversionTable: Record<string, string>,
+      options?: {
+        onExistenceFound?: (originalValue: string, convertToValue: string) => string,
+        onNewValueBeforeAdd?: (originalValue: string, valueToSave: string) => string
+      }
+    ) => {
       const escaped = cssEscape(value);
       if (conversionTable[escaped]) {
         const convertToValue = conversionTable[escaped];
-        if (onExistenceFound) {
-          return onExistenceFound(value, convertToValue);
+        if (options?.onExistenceFound) {
+          return options.onExistenceFound(value, convertToValue);
         }
         return convertToValue;
       }
-      const hashValue = generateHash(value, localSeed);
-      conversionTable[escaped] = hashValue;
+      const hashValue = prefix + generateHash(value, localSeed) + suffix;
+      conversionTable[escaped] = cssEscape(options?.onNewValueBeforeAdd ? options.onNewValueBeforeAdd(value, hashValue) : hashValue);
       return hashValue;
     };
   }
@@ -187,10 +241,7 @@ const createConversionFunction = (
  * @returns A visitor object compatible with lightningcss.
  */
 const INTERNAL_buildVisitor = (
-  convertFunc: (
-    value: string,
-    conversionTable: Record<string, string>,
-  ) => string,
+  convertFunc: ReturnType<typeof createConversionFunction>,
   selectorConversionTable: ConversionTable,
   identConversionTable: ConversionTable,
 ) => ({
@@ -198,14 +249,14 @@ const INTERNAL_buildVisitor = (
     return INTERNAL_handleSelector(
       selector,
       selectorConversionTable,
-      (value: string, conversionTable: Record<string, string>) => {
+      (value: string, conversionTable: Record<string, string>, ...props) => {
         const escapedValue = cssEscape(value);
         if (selectorConversionTable[escapedValue]) {
           return parseSelectorComponent( // <- Allow to convert to complex selector
             cssUnescape(selectorConversionTable[escapedValue])
           );
         }
-        return convertFunc(value, conversionTable);
+        return convertFunc(value, conversionTable, ...props);
       }
     );
   },

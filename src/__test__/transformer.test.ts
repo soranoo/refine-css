@@ -1,5 +1,6 @@
-import { assertEquals, assertNotEquals } from "jsr:@std/assert";
+import { assertEquals, assertNotEquals, assertObjectMatch } from "jsr:@std/assert";
 import { transform } from "@/transformer.ts";
+import type { ConversionTables } from "@/types.ts";
 
 Deno.test("transform - hash mode (default)", () => {
   const input = `
@@ -103,7 +104,7 @@ Deno.test("transform - custom seed in hash mode", () => {
 
 Deno.test("transform - preserves conversion tables", () => {
   const existingTables = {
-    selector: { 
+    selector: {
       "\\.existing": "\\.preserved-class",
       "\\.existing-2": "\\.preserved-class-2 \\#preserved-id",
     },
@@ -184,15 +185,20 @@ Deno.test("transform - handles basic selectors", () => {
     .b { color: green; }
     * { box-sizing: border-box; }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {
+      "\\#myId": "\\#a",
+      "\\.myClass": "\\.b",
+    },
+    ident: {},
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
-  // Should have 2 selectors converted (#myId, .myClass) 
-  // but not the element selector or universal selector
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 2);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 0);
+
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 Deno.test("transform - handles pseudo-classes", () => {
@@ -210,14 +216,27 @@ Deno.test("transform - handles pseudo-classes", () => {
     .c:where(.d, .e) { position: relative; }
     .f:is(.g, .h) { border: 1px solid red; }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {
+      "\\.item": "\\.a",
+      "\\.active": "\\.b",
+      "\\.menu": "\\.c",
+      "\\.dropdown": "\\.d",
+      "\\.popup": "\\.e",
+      "\\.section": "\\.f",
+      "\\.important": "\\.g",
+      "\\.highlight": "\\.h",
+    },
+    ident: {},
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
+
   // Function-like pseudo-classes should not be converted, but class selectors should
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 8);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 0);
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 Deno.test("transform - handles host pseudo-class", () => {
@@ -229,14 +248,20 @@ Deno.test("transform - handles host pseudo-class", () => {
     :host { display: block; }
     :host(.a) { font-weight: bold; }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {
+      "\\.classname": "\\.a",
+    },
+    ident: {},
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
+
   // Host selectors should be preserved
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 1);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 0);
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 Deno.test("transform - handles attribute selectors", () => {
@@ -248,14 +273,18 @@ Deno.test("transform - handles attribute selectors", () => {
     [data-attr] { display: block; }
     [data-role="button"] { cursor: pointer; }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {},
+    ident: {},
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
+
   // Attribute selectors should be preserved
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 0);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 0);
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 Deno.test("transform - handles combinators", () => {
@@ -267,14 +296,23 @@ Deno.test("transform - handles combinators", () => {
     .a > .b { margin: 10px; }
     .c ~ .d { padding: 5px; }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {
+      "\\.parent": "\\.a",
+      "\\.child": "\\.b",
+      "\\.sibling": "\\.c",
+      "\\.next-sibling": "\\.d",
+    },
+    ident: {},
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
+
   // Each class selector should be converted
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 4);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 0);
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 Deno.test("transform - handles multiple complex selectors", () => {
@@ -288,14 +326,22 @@ Deno.test("transform - handles multiple complex selectors", () => {
       border: 2px solid #000; 
     }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {
+      "\\.complex": "\\.a",
+      "\\.simple": "\\.b",
+      "\\.advanced": "\\.c",
+    },
+    ident: {},
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
+
   // Should convert all three class selectors
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 3);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 0);
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 Deno.test("transform - handles custom properties in :root", () => {
@@ -311,14 +357,21 @@ Deno.test("transform - handles custom properties in :root", () => {
       --b: orange;
     }
   `;
+  const expectedConversionTable: ConversionTables = {
+    selector: {},
+    ident: {
+      "main-color": "a",
+      "accent-color": "b",
+    },
+  };
 
   const result = transform({ css: input, mode: "minimal", lightningcssOptions: { minify: false } });
 
   INTERNAL_assertCss(result.css, expectedOutput);
-  
+
   // Should convert both custom properties
-  INTERNAL_assertConversionTable(result.conversionTables.selector, 0);
-  INTERNAL_assertConversionTable(result.conversionTables.ident, 2);
+  assertObjectMatch(result.conversionTables.selector, expectedConversionTable.selector);
+  assertObjectMatch(result.conversionTables.ident, expectedConversionTable.ident);
 });
 
 /**
