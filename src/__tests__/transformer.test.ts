@@ -1,10 +1,13 @@
+import type { ConversionTables } from "@/types.ts";
+
 import {
   assertEquals,
   assertNotEquals,
   assertObjectMatch,
 } from "jsr:@std/assert";
-import { transform } from "@/transformer.ts";
-import type { ConversionTables } from "@/types.ts";
+import { initTransform, transform } from "@/transformer.ts";
+
+await initTransform();
 
 Deno.test("transform - hash mode (default)", () => {
   const input = `

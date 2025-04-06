@@ -1,11 +1,9 @@
 import type { TransformProps } from "@/types.ts";
 
 import { parseArgs as jsrParseArgs } from "jsr:@std/cli/parse-args";
-import { transform } from "@/index.ts";
+import { initTransform, transform } from "@/index.ts";
 
 // TODO: add cli test
-// TODO: finish relaease config
-// TODO: bugs deno run cli src/sample/test.css selector missing . in classname
 
 /**
  * Displays help information for the CLI tool
@@ -90,6 +88,8 @@ const parseArgsa = () => {
  * Main function to run the CLI tool
  */
 const main = async () => {
+  await initTransform();
+  
   try {
     const options = parseArgsa();
 
@@ -163,5 +163,5 @@ export {
 
 if (import.meta.main) {
   // If this module is run directly, execute the main function
-  await main();
+  main();
 }
