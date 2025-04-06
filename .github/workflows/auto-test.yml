@@ -40,7 +40,7 @@ jobs:
       # Scan the code for syntax errors and style issues. If
       # you want to use a custom linter configuration you can add a configuration file with --config 
       - name: Run Linter
-        run: deno lint --unstable --config .deno_lint.json
+        run: deno lint
 
       - name: Run Tests
         run: deno run test
