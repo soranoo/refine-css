@@ -13,8 +13,10 @@ import {
   stringifySelectorComponent,
 } from "@/utils.ts";
 
-await init();
-await initializeHash();
+export const initTransform = async () => {
+  await init();
+  await initializeHash();
+};
 
 /**
  * Recursively processes a CSS selector's components with a given conversion function.

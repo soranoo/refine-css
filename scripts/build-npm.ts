@@ -9,8 +9,8 @@ await build({
   entryPoints: ["./mod.ts", "./cli.ts"],
   importMap: "deno.json",
   outDir: `${BASE_PATH}`,
+  rootTestDir: "./folder-that-never-exists", // To avoid the test folder getting checked for top-level await
   typeCheck: false,
-  scriptModule: false,
   packageManager: "npm",
   shims: {
     // see JS docs for overview and more options
