@@ -9,7 +9,8 @@
     "lint": "deno lint",
     "fmt": "deno fmt",
     "build:npm": "deno run -A ./scripts/build-npm.ts",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "commitlint": "commitlint"
   },
   "imports": {
     "@commitlint/cli": "npm:@commitlint/cli@^19.8.0",
